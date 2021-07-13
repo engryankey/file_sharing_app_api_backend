@@ -27,10 +27,12 @@ import json
 @permission_classes([IsAuthenticated])
 def files(request):
     owner = request.user
-
+    
     if request.method == "POST":
         file = request.FILES.get("file")
+
         data = request.data
+        print(data)
         UploadFile.objects.create(
             file_owner=owner,
             file=file,
@@ -55,7 +57,7 @@ def files(request):
 
         serializer = ListUploadFileSerializer(files, many=True)
         return Response(
-            {"data": serializer.data},
+            serializer.data,
             status=status.HTTP_200_OK,
         )
 
@@ -70,7 +72,7 @@ def file_detail_view(request, identifier):
             if request.method == "GET":
                 serializer = DeatailUploadFileSerializer(file, many=False)
                 return Response(
-                    {"data": serializer.data,},
+                    [serializer.data],
                     status=status.HTTP_200_OK,
                 )
 
@@ -121,7 +123,6 @@ def file_detail_view(request, identifier):
 
         else:
             if request.method == "GET":
-                print(identifier)
                 if file.restricted_by_user:
                     if file.authorised_user != request.user:
                         return Response(
@@ -201,14 +202,15 @@ def validate_file(request, identifier):
     print(identifier)
     try:
         file = UploadFile.objects.get(identifier = identifier.lower())
+        serializer = DeatailUploadFileSerializer(file, many=False)
         return Response(
-            {"message": "Successful"},
+            [serializer.data],
             status=status.HTTP_200_OK,
         )
 
     except UploadFile.DoesNotExist:
         return Response(
-            {"message": "Failed"},
+            [{"message": "Failed"}],
             status=status.HTTP_404_NOT_FOUND,
         )
 
@@ -255,4 +257,12 @@ def share_file(request, username, identifier):
             {"message": "Failed"},
             status=status.HTTP_404_NOT_FOUND,
         )
-    
+
+
+
+@api_view(["POST"])
+# @permission_classes([IsAuthenticated])
+def test_link(request):
+    print(request.body)
+    # print(request.user)
+    return Response({'message': 'Hi'})

@@ -33,7 +33,7 @@ class UploadFile(models.Model):
         if 'image' in self.mime_type:
             self.thumbnail = self.file
         else:
-            for image in os.listdir(os.getcwd()+'\media\images'):
+            for image in os.listdir(os.getcwd()+'/media/images'):
                 if image.split(".")[0] in self.mime_type:
                     self.thumbnail = f'images/{image}'
         super().save(*args, **kwargs)
