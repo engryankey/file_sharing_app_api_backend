@@ -32,7 +32,6 @@ def files(request):
         file = request.FILES.get("file")
 
         data = request.data
-        print(data)
         UploadFile.objects.create(
             file_owner=owner,
             file=file,
@@ -41,7 +40,7 @@ def files(request):
             description=data["description"],
             authorised_user= data["authorised_user"] if data["restricted_by_user"] == "true" else None,
             size_bytes=data["bytes"],
-            size_mb=data["mb"],
+            size_mb=f'{str(round(int(data["bytes"])/(1024 * 1024), 1))} MB',
             mime_type=mimetypes.guess_type(data["file_name"], strict=True)[0],
             location=data["location"],
             restricted_by_user= True if data["restricted_by_user"] == "true" else False,
@@ -87,7 +86,6 @@ def file_detail_view(request, identifier):
 
             elif request.method == "PUT":
                 data = request.data
-                print(request.headers)
                 try:
                     file = UploadFile.objects.get(identifier=identifier.split('-')[0])
                     if data['category'] == 'by_user':
@@ -126,35 +124,35 @@ def file_detail_view(request, identifier):
                 if file.restricted_by_user:
                     if file.authorised_user != request.user:
                         return Response(
-                            {
+                            [{
                                 "message": "Unauthorized user",
-                            },
+                            }],
                             status=status.HTTP_401_UNAUTHORIZED,
                         )
                     else:
                         serializer = DeatailUploadFileSerializer(file, many=False)
                         return Response(
-                            {"data": serializer.data, "methods": "GET"},
+                            [serializer.data],
                             status=status.HTTP_200_OK,
                         )
                 elif file.restricted_by_country:
                     if file.location.lower() != identifier.split('-')[1].lower():
                         return Response(
-                            {
+                            [{
                                 "message": "Unauthorized location",
-                            },
+                            }],
                             status=status.HTTP_401_UNAUTHORIZED,
                         )
                     else:
                         serializer = DeatailUploadFileSerializer(file, many=False)
                         return Response(
-                            {"data": serializer.data, "methods": "GET"},
+                            [serializer.data],
                             status=status.HTTP_200_OK,
                         )
                 else:
                     serializer = DeatailUploadFileSerializer(file, many=False)
                     return Response(
-                        {"data": serializer.data, "message": "Successful"},
+                        [serializer.data],
                         status=status.HTTP_200_OK,
                     )
 
@@ -219,7 +217,7 @@ def validate_file(request, identifier):
 @permission_classes([IsAuthenticated])
 def share_file(request, username, identifier):
     receiver = User.objects.get(username = username)
-    key_path = os.getcwd()+'\servicekey.json'
+    key_path = os.getcwd()+'/servicekey.json'
     cred = credentials.Certificate(key_path)
     try:
         firebase_admin.initialize_app(cred)

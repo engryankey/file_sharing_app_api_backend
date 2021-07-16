@@ -32,7 +32,7 @@ def register_user(request):
             last_name = data['last_name'],
             username = data['username'].lower(),
             email = data['email'],
-            password = make_password(data['password'])
+            password = data['password']
         )
 
         serializer = UserSerializerToken(user, many=False)
